@@ -88,7 +88,7 @@ def get_vm_category_mapping_from_file(filepath):
             for _, row in df.iterrows()
         }
 
-        logging.success(f"Loaded category mapping for {len(vm_names)} VMs from file.")
+        logging.info(f"[SUCCESS] Loaded category mapping for {len(vm_names)} VMs from file.")
         return vm_names, vm_category_dict
     except FileNotFoundError:
         logging.error(f"File not found: {filepath}")
@@ -147,6 +147,8 @@ def add_vms_to_categories(vm_names=[], vm_category_mapping={}):
             logging.error(f"[ERROR] Unexpected error updating VM '{vm.get('status', {}).get('name', 'UNKNOWN')}': {e}")
 
     return "[SUCCESS] Category assignment process completed."
+
+
 
 
 # ------------------- Example Usage -------------------
