@@ -4,5 +4,5 @@
 ### V3 API Scripts
 #### 1. Filter VMs on VM Names.
 #### 2. Add to Categories using VM Names.
-#### 2. Remove from Categories using VM Names.
-#### 2. Fetch and Delete Orphan Recovery points : Deleted VMs / Migrated VMs / Existing VMs.
+#### 3. Remove from Categories using VM Names.
+#### 4. Fetch and Delete Orphan Recovery points : Deleted VMs / Migrated VMs / Existing VMs.
