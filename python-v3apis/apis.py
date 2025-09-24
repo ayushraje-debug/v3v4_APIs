@@ -4,6 +4,11 @@ from decouple import config
 import pandas as pd
 import logging
 import sys
+import os
+import subprocess
+from getpass import getpass
+import paramiko
+
 # ------------------- Configure Logging -------------------
 logging.basicConfig(
     level=logging.INFO,
@@ -77,7 +82,15 @@ def get_vm_category_mapping_from_file(filepath):
     <vm_name>, <category_name>, <category_value>
     """
     try:
-        df = pd.read_csv(filepath_or_buffer=filepath)
+        _, ext = os.path.splitext(filepath)
+
+        if ext.lower() == ".csv":
+            df = pd.read_csv(filepath)
+        elif ext.lower() in [".xls", ".xlsx"]:
+            df = pd.read_excel(filepath)
+        else:
+            raise ValueError(f"Unsupported file format: {ext}")
+
         if not all(col in df.columns for col in ['name', 'category', 'value']):
             logging.error("CSV file must contain 'name', 'category', and 'value' columns.")
             return [], {}
@@ -136,12 +149,88 @@ def add_vms_to_categories(vm_names=[], vm_category_mapping={}):
         except Exception as e:
             logging.error(f"[ERROR] Unexpected error updating VM '{vm.get('status', {}).get('name', 'UNKNOWN')}': {e}")
     return "[SUCCESS] Category assignment process completed."
+
+def parse_recovery_points(text):
+    """
+    Parses text protobuf from polaris_cli list_recovery_points output.
+    Extracts:
+      - VM name (from live_entity_list)
+      - Recovery point UUID (from recovery_point_list.properties)
+      - VM recovery point UUID (from vm_recovery_point_list.properties)
+    """
+    recovery_points = []
+    current = {}
+    context_stack = []
+
+    for line in text.splitlines():
+        line = line.strip()
+
+        # skip headers
+        if line.startswith(">>>") or line.startswith("ListRecoveryPoints returned"):
+            continue
+
+        if line.endswith("{"):
+            context_stack.append(line.split()[0])
+        elif line == "}":
+            if context_stack:
+                context_stack.pop()
+            if not context_stack and current:
+                recovery_points.append(current)
+                current = {}
+        elif line.startswith("uuid:"):
+            uuid_val = line.split("uuid:")[1].strip().strip('"')
+            if context_stack[-1] == "properties":
+                if len(context_stack) >= 2 and context_stack[-2] == "recovery_point_list":
+                    current["recovery_point_uuid"] = uuid_val
+                elif len(context_stack) >= 2 and context_stack[-2] == "vm_recovery_point_list":
+                    current["vm_recovery_point_uuid"] = uuid_val
+        elif line.startswith("name:"):
+            name_val = line.split("name:")[1].strip().strip('"')
+            if context_stack and context_stack[-1] == "live_entity_list":
+                current["vm_name"] = name_val
+        elif line.startswith("status:"):
+            current["status"] = line.split("status:")[1].strip()
+        elif line.startswith("total_user_written_bytes:"):
+            current["total_user_written_bytes"] = int(line.split(":")[1].strip())
+        elif line.startswith("total_exclusive_usage_bytes:"):
+            current["total_exclusive_usage_bytes"] = int(line.split(":")[1].strip())
+
+    return recovery_points
+
+
+
+
+def remove_orphan_recovery_points(filepath):
+    
+
+
+    host = config("CVM_IP")
+    username = "nutanix"
+    password = config("CVM_PASSWORD")  
+
+    ssh = paramiko.SSHClient()
+    ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())  # for first-time hosts
+    ssh.connect(hostname=host, username=username, password=password, look_for_keys=False)
+    stdin, stdout, stderr = ssh.exec_command("/home/nutanix/bin/polaris_cli list_recovery_points")
+    json_rp = parse_recovery_points(stdout.read().decode())
+    print(len(json_rp))
+
+    # with open("recovery_point_list.json" ,"w+") as file:
+    #     file.write(stdout.read().decode())
+    # print(stdout.read().decode())
+    # print(stderr.read())
+    print(json_rp)
+    ssh.close()
+
 # ------------------- Example Usage -------------------
 if __name__ == "__main__":
-    file_path = r"C:\Automation\VM_Category\v3v4_APIs\python-v3apis\test_csv.csv"
-    vm_names, vm_category_mapping = get_vm_category_mapping_from_file(filepath=file_path)
-    if vm_names and vm_category_mapping:
-        result = add_vms_to_categories(vm_names=vm_names, vm_category_mapping=vm_category_mapping)
-        logging.info(result)
-    else:
-        logging.warning("No VM category mapping loaded; skipping category assignment.")
+
+
+    # file_path = r"C:\Automation\VM_Category\v3v4_APIs\python-v3apis\test_csv.csv"
+    # vm_names, vm_category_mapping = get_vm_category_mapping_from_file(filepath=file_path)
+    # if vm_names and vm_category_mapping:
+    #     result = add_vms_to_categories(vm_names=vm_names, vm_category_mapping=vm_category_mapping)
+    #     logging.info(result)
+    # else:
+    #     logging.warning("No VM category mapping loaded; skipping category assignment.")
+    remove_orphan_recovery_points("None")
