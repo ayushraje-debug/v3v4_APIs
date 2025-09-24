@@ -111,6 +111,7 @@ def get_vm_category_mapping_from_file(filepath):
 # ------------------- Assign Categories -------------------
 def add_vms_to_categories(vm_names=[], vm_category_mapping={}):
     """
+    Note : This is initially for single category to value mapping.
     vm_category_mapping = {
         <vm_name>: {
             'category': <category_name>,
@@ -120,8 +121,9 @@ def add_vms_to_categories(vm_names=[], vm_category_mapping={}):
     }
     """
     filtered_vms = filter_vms_on_name(vm_names=vm_names)
-    print(len(filtered_vms))
-    print(len(vm_names))
+    logging.debug(f"VMs provided in file : {len(vm_names)}")
+    logging.debug(f"VMs matched for updating : {len(filtered_vms)}")
+    
     for vm in filtered_vms:
         try:
             vm_name = vm['status']['name']
@@ -133,7 +135,8 @@ def add_vms_to_categories(vm_names=[], vm_category_mapping={}):
                 logging.info(f"[SKIP] VM '{vm_name}' already has category '{category}={value}'")
                 continue
             logging.info(f"Updating VM '{vm_name}' with category '{category}={value}'")
-            categories[category] = value
+            # categories[category] = value
+            metadata['categories'][category] = value
             request_url = f"{config('BASE_URL')}/vms/{metadata['uuid']}"
             payload = {
                 "metadata": metadata,
@@ -149,6 +152,53 @@ def add_vms_to_categories(vm_names=[], vm_category_mapping={}):
         except Exception as e:
             logging.error(f"[ERROR] Unexpected error updating VM '{vm.get('status', {}).get('name', 'UNKNOWN')}': {e}")
     return "[SUCCESS] Category assignment process completed."
+
+def remove_vms_from_categories(vm_names=[], vm_category_mapping={}):
+    """
+    Note : This is initially for single category to value mapping.
+    vm_category_mapping = {
+        <vm_name>: {
+            'category': <category_name>,
+            'value': <category_value>
+        },
+        ...
+    }
+    """
+    filtered_vms = filter_vms_on_name(vm_names=vm_names)
+    logging.debug(f"VMs provided in file : {len(vm_names)}")
+    logging.debug(f"VMs matched for updating : {len(filtered_vms)}")
+
+    for vm in filtered_vms:
+        try:
+            vm_name = vm['status']['name']
+            metadata = vm.get('metadata', {})
+            categories = metadata.get('categories', {})
+            category = vm_category_mapping[vm_name]['category']
+            value = vm_category_mapping[vm_name]['value']
+            if category in categories and categories[category] == value:
+                logging.info(f"[FOUND] VM '{vm_name}' has category '{category}={value}'")
+                metadata['use_categories_mapping'] = True
+                del metadata['categories_mapping'][category]
+                request_url = f"{config('BASE_URL')}/vms/{metadata['uuid']}"
+                payload = {
+                "metadata": metadata,
+                "spec": vm['spec']
+                }
+                response = session.put(url=request_url, json=payload)
+                if response.ok:
+                    logging.info(f"[SUCCESS] VM '{vm_name}' updated with category '{category}={value}'")
+                else:
+                    logging.error(f"[ERROR] Failed to update VM '{vm_name}': {response.status_code} - {response.text}")
+            else:
+                logging.info(f"[SKIP] Skipping VM '{vm_name}' doesn't have category '{category}={value}'")
+            
+        except KeyError as e:
+            logging.error(f"[ERROR] Missing expected key: {e}")
+        except Exception as e:
+            logging.error(f"[ERROR] Unexpected error updating VM '{vm.get('status', {}).get('name', 'UNKNOWN')}': {e}")
+    return "[SUCCESS] Category deletion process completed."
+
+
 
 def parse_recovery_points(text):
     """
@@ -226,11 +276,12 @@ def remove_orphan_recovery_points(filepath):
 if __name__ == "__main__":
 
 
-    # file_path = r"C:\Automation\VM_Category\v3v4_APIs\python-v3apis\test_csv.csv"
-    # vm_names, vm_category_mapping = get_vm_category_mapping_from_file(filepath=file_path)
-    # if vm_names and vm_category_mapping:
-    #     result = add_vms_to_categories(vm_names=vm_names, vm_category_mapping=vm_category_mapping)
-    #     logging.info(result)
-    # else:
-    #     logging.warning("No VM category mapping loaded; skipping category assignment.")
-    remove_orphan_recovery_points("None")
+    file_path = r"/Users/ayush.raje/Documents/Prism Automation APIs/python-v3apis/Category_Removal.xlsx"
+    vm_names, vm_category_mapping = get_vm_category_mapping_from_file(filepath=file_path)
+    if vm_names and vm_category_mapping:
+        # result = add_vms_to_categories(vm_names=vm_names, vm_category_mapping=vm_category_mapping)
+        result = remove_vms_from_categories(vm_names=vm_names, vm_category_mapping=vm_category_mapping)
+        logging.info(result)
+    else:
+        logging.warning("No VM category mapping loaded; skipping category assignment.")
+    
