@@ -10,6 +10,18 @@ import sys
 import logging
 import argparse
 
+  # --- Logging Setup ---
+logging.basicConfig(
+        level=logging.INFO,
+        format='[%(levelname)s] %(asctime)s - %(message)s',
+        datefmt='%Y-%m-%d %H:%M:%S',
+        handlers=[
+            logging.FileHandler("rp_management.log", mode='a'),
+            logging.StreamHandler(sys.stdout)
+        ]
+)
+
+
 # --- Global Settings ---
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
@@ -155,15 +167,7 @@ def main():
                         default=config('NUTANIX_PASSWORD', default=None))
     args = parser.parse_args()
 
-    # --- Logging Setup ---
-    logging.basicConfig(
-        level=logging.INFO,
-        format='%(asctime)s - %(levelname)s - %(message)s',
-        handlers=[
-            logging.FileHandler("rp_management.log", mode='a'),
-            logging.StreamHandler(sys.stdout)
-        ]
-    )
+  
 
     logging.info("--- Script started ---")
 
