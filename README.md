@@ -20,6 +20,7 @@ Before running the scripts, ensure the following requirements are met:
 ## 📦 Setup & Usage
 
 > _Typically, you'll want to create a virtual environment and install required packages listed in a `requirements.txt` file._
+> _Make sure you create a new folder, where you'll keep the scripts and create virtual environment._
 1. Create a python virtual-environment in a desired folder:
    - <pre> python -m venv venv </pre>
 
