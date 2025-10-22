@@ -3,7 +3,7 @@
 This repository provides automation scripts for performing **CRUD operations** and various **day-2 use cases** on different entities using **Prism v3** and **v4 APIs**. These scripts aim to simplify common admin tasks across virtual infrastructure.
 
 > 🔧 Feel free to use, modify, or contribute to this repository!
-
+> This repository is currently maintained & owned by Ayush Raje(ayush.raje@nutanix.com)
 ---
 
 ## ✅ Prerequisites
@@ -57,12 +57,14 @@ Before running the scripts, ensure the following requirements are met:
    - Migrated VMs  
    - Existing but unprotected VMs
 
+5. **Fetch all Recovery Job Executions in Last 'X' hours**(to be added).   
+
 ---
 
 ### 🔸 V4 API Scripts
 
 1. **Get VM & Host Inventory Metrics**  
-   Fetch detailed inventory metrics using v4 API, including VM and host utilization data.
+   Fetch detailed inventory metrics using v4 API, including VM and host utilization data into an Excel (Due to AOS 7.3 Custom Column Issue)
 
 ---
 
