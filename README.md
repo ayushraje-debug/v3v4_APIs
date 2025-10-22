@@ -65,7 +65,7 @@ Before running the scripts, ensure the following requirements are met:
 ### 🔸 V4 API Scripts
 
 1. **Get VM & Host Inventory Metrics**  
-   Fetch detailed inventory metrics using v4 API, including VM and host utilization data into an Excel (Due to AOS 7.3 Custom Column Issue)
+   Fetch detailed inventory metrics using v4 API, including VM and host utilization data into an Excel and send automated emails.(Due to AOS 7.3 Custom Column Bug)
 
 ---
 
