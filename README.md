@@ -3,7 +3,8 @@
 This repository provides automation scripts for performing **CRUD operations** and various **day-2 use cases** on different entities using **Prism v3** and **v4 APIs**. These scripts aim to simplify common admin tasks across virtual infrastructure.
 
 > 🔧 Feel free to use, modify, or contribute to this repository!
-> This repository is currently maintained & owned by Ayush Raje(ayush.raje@nutanix.com)
+
+> 🔧 This repository is currently maintained & owned by Ayush Raje(ayush.raje@nutanix.com)
 ---
 
 ## ✅ Prerequisites
